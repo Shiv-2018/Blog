@@ -5,7 +5,6 @@ import { User } from "../models/user.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 
-
 const generateAccessAndRefereshTokens = async (userId) => {
   try {
     const user = await User.findById(userId);
@@ -105,8 +104,7 @@ const loginUser = asyncHandler(async (req, res) => {
 });
 
 // update user
-const updateUser = asyncHandler(async (req, res) =>{
-  
+const updateUser = asyncHandler(async (req, res) => {
   const { userId } = req.params;
   const { username, email, password } = req.body;
 
@@ -125,36 +123,47 @@ const updateUser = asyncHandler(async (req, res) =>{
 
   await user.save();
 
-  return res.status(200).json(
-    new ApiResponse(200, user, "User updated successfully")
-  );
-})       
+  return res
+    .status(200)
+    .json(new ApiResponse(200, user, "User updated successfully"));
+});
 
-const logoutUser = asyncHandler(async(req, res) => {
-    await User.findByIdAndUpdate(
-        req.user._id,
-        {
-            $unset: {
-                refreshToken: 1 // this removes the field from document
-            }
-        },
-        {
-            new: true
-        }
-    )
-
-    const options = {
-        httpOnly: true,
-        secure: true
+const logoutUser = asyncHandler(async (req, res) => {
+  await User.findByIdAndUpdate(
+    req.user._id,
+    {
+      $unset: {
+        refreshToken: 1, // this removes the field from document
+      },
+    },
+    {
+      new: true,
     }
+  );
 
-    return res
+  const options = {
+    httpOnly: true,
+    secure: true,
+  };
+
+  return res
     .status(200)
     .clearCookie("accessToken", options)
     .clearCookie("refreshToken", options)
-    .json(new ApiResponse(200, {}, "User logged Out"))
-})
+    .json(new ApiResponse(200, {}, "User logged Out"));
+});
 
+// Get current user
+const getCurrentUser = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id).select(
+    "-password -refreshToken"
+  );
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+  return res
+    .status(200)
+    .json(new ApiResponse(200, user, "Current user fetched"));
+});
 
-
-export { registerUser, loginUser,updateUser ,logoutUser};
+export { registerUser, loginUser, updateUser, logoutUser, getCurrentUser };

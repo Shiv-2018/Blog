@@ -1,21 +1,34 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const PostSchema = new mongoose.Schema(
   {
     userId: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
       required: true,
     },
-    desc: {
+    title: {
       type: String,
-      max: 500,
+      max: 20,
+    },
+    content:{
+      type: String,
+      required: true,  // Assuming content is required for a post
     },
     img: {
       type: String,
     },
     likes: {
-      type: Array,
+      type: [mongoose.Schema.Types.ObjectId],  // if you want to store user IDs who liked
       default: [],
+    },
+    tags: {
+      type: [String],
+      default: [],
+    },
+    isPublic: {
+      type: Boolean,
+      default: true,
     },
   },
   { timestamps: true }

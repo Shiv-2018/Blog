@@ -6,6 +6,7 @@ import { User, Calendar, Eye, Lock } from "lucide-react";
 
 export const PostCard = ({ post, isPreview = false }) => {
   const isLocked = isPreview && !post.isPublic;
+  //console.log("Post username:", post.userId.username);
 
   return (
     <Card className="group hover:shadow-lg transition-all duration-300 border-border/50 hover:border-primary/20">
@@ -32,7 +33,7 @@ export const PostCard = ({ post, isPreview = false }) => {
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-1">
               <User className="h-3 w-3" />
-              <span>{post.author?.username || "Anonymous"}</span>
+              <span>{post.userId.username || "Anonymous"}</span>
             </div>
             <div className="flex items-center space-x-1">
               <Calendar className="h-3 w-3" />

@@ -1,17 +1,22 @@
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+import dayjs from "dayjs";
 
 export function cn(...inputs) {
   return twMerge(clsx(inputs));
 }
 
+// export function formatDate(date) {
+//   const options = {
+//     year: "numeric",
+//     month: "long",
+//     day: "numeric",
+//   };
+//   return new Date(date).toLocaleDateString("en-US", options);
+// }
+
 export function formatDate(date) {
-  const options = {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  };
-  return new Date(date).toLocaleDateString("en-US", options);
+  return dayjs(date).format("DD MMM YYYY"); // or "YYYY-MM-DD"
 }
 
 export function formatRelativeTime(date) {

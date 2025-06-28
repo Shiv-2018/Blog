@@ -33,8 +33,9 @@ export const PostDetail = () => {
   const fetchPost = async () => {
     try {
       setLoading(true);
-      const response = await apiService.getPost(id);
-      setPost(response.data);
+      console.log("Fetching post with ID:", id);
+      const response = await apiService.getPostById(id);
+      setPost(response.data.data);
     } catch (err) {
       if (err.message.includes("401") || err.message.includes("unauthorized")) {
         setError("You need to login to view this post");
@@ -100,7 +101,24 @@ export const PostDetail = () => {
     );
   }
 
-  const isAuthor = user && post.author && user._id === post.author._id;
+  const currentUserId = user?.data?._id;
+
+  // Add this debugging code to see the actual post structure
+  console.log("=== POST DEBUGGING ===");
+  console.log("Full post object:", post);
+  console.log("Post keys:", Object.keys(post || {}));
+  console.log("Raw post.userId:", post?.userId);
+  console.log("Post author field:", post?.userId?.username);
+  console.log("Post user field:", post?.user);
+  console.log("Post createdAT:", post?.createdAt);
+
+  // Check if current user is the author
+  const isAuthor = post?.userId?.username;
+
+  console.log("Current User ID:", currentUserId);
+  console.log("Post Author:", post.userId);
+  console.log("Post Author ID:", post.userId?._id);
+  console.log("Is Author:", isAuthor);
 
   return (
     <div className="min-h-screen bg-background">
@@ -149,7 +167,7 @@ export const PostDetail = () => {
               <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-4">
                 <div className="flex items-center space-x-1">
                   <User className="h-4 w-4" />
-                  <span>{post.author?.username || "Anonymous"}</span>
+                  <span>{isAuthor || "Anonymous"}</span>
                 </div>
                 <div className="flex items-center space-x-1">
                   <Calendar className="h-4 w-4" />

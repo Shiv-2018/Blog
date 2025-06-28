@@ -102,15 +102,128 @@
 
 // export default new ApiService();
 
+// import axios from "axios";
+
+// const USER_API_BASE = "http://localhost:8000/api/v1/users"; //
+// const POST_API_BASE = "http://localhost:8000/api/v1/posts"; //
+
+// const apiService = {
+//   register: (userData) =>
+//     axios.post(`${USER_API_BASE}/register`, userData, {
+//       withCredentials: true,
+//     }),
+//   login: (credentials) =>
+//     axios.post(`${USER_API_BASE}/login`, credentials, {
+//       withCredentials: true,
+//     }),
+//   updateAccount: (data) =>
+//     axios.patch(`${USER_API_BASE}/update-account`, data, {
+//       withCredentials: true,
+//     }),
+//   logout: () =>
+//     axios.post(`${USER_API_BASE}/logout`, {}, { withCredentials: true }),
+//   getCurrentUser: () =>
+//     axios.get(`${USER_API_BASE}/current-user`, { withCredentials: true }),
+
+//   // post
+//   createPost: (postData) =>
+//     axios.post(`${POST_API_BASE}/createPost`, postData, {
+//       withCredentials: true,
+//     }),
+//   getPostById: (id) => axios.get(`${POST_API_BASE}/${id}`),
+//   deletePost: (id) =>
+//     axios.delete(`${POST_API_BASE}/delete/${id}`, { withCredentials: true }),
+//   toggleLikePost: (id) =>
+//     axios.patch(`${POST_API_BASE}/like/${id}`, {}, { withCredentials: true }),
+//   getUserPosts: (userId) => axios.get(`${POST_API_BASE}/user/${userId}`),
+//   getPosts: () =>
+//   axios.get(`${POST_API_BASE}/all`, { withCredentials: true }),
+
+// };
+
+// export default apiService;
+
 import axios from "axios";
 
-const API_BASE = "http://localhost:8000/api/v1/users"; // adjust to your backend URL
+const USER_API_BASE = "http://localhost:8000/api/v1/users";
+const POST_API_BASE = "http://localhost:8000/api/v1/posts";
+
+// Create axios instance with interceptors
+const axiosInstance = axios.create({
+  withCredentials: true,
+  timeout: 10000, // 10 second timeout
+});
+
+// Add response interceptor for better error handling
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    console.error("API Error:", error);
+
+    // Handle common error cases
+    if (error.response?.status === 401) {
+      // Clear any stored auth data
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      // Optionally redirect to login
+      // window.location.href = '/login';
+    }
+
+    return Promise.reject(error);
+  }
+);
 
 const apiService = {
-  register: (userData) => axios.post(`${API_BASE}/register`, userData, { withCredentials: true }),
-  login: (credentials) => axios.post(`${API_BASE}/login`, credentials, { withCredentials: true }),
-  updateAccount: (data) => axios.patch(`${API_BASE}/update-account`, data, { withCredentials: true }),
-  logout: () => axios.post(`${API_BASE}/logout`, {}, { withCredentials: true }),
+  // Auth methods
+  register: (userData) =>
+    axiosInstance.post(`${USER_API_BASE}/register`, userData),
+
+  login: (credentials) =>
+    axiosInstance.post(`${USER_API_BASE}/login`, credentials),
+
+  updateAccount: (data) =>
+    axiosInstance.patch(`${USER_API_BASE}/update-account`, data),
+
+  logout: () => axiosInstance.post(`${USER_API_BASE}/logout`, {}),
+
+  getCurrentUser: () => axiosInstance.get(`${USER_API_BASE}/current-user`),
+
+  // Post methods - Updated to match your backend routes
+  createPost: (postData) => axiosInstance.post(`${POST_API_BASE}`, postData), // Changed from /createPost to /
+
+  getPostById: (id) => {
+    console.log("Getting post by ID:", id);
+    return axiosInstance.get(`${POST_API_BASE}/${id}`);
+  },
+
+  deletePost: (id) => axiosInstance.delete(`${POST_API_BASE}/${id}`), // Changed from /delete/${id} to /${id}
+
+  toggleLikePost: (id) => axiosInstance.post(`${POST_API_BASE}/${id}/like`, {}), // Changed from /like/${id} to /${id}/like
+
+  getUserPosts: (userId) => {
+    // console.log("=== getUserPosts Debug ===");
+    // console.log("Received userId:", userId);
+    // console.log("userId type:", typeof userId);
+    // console.log("userId length:", userId?.length);
+    console.log(
+      "Is userId valid:",
+      userId && userId !== "undefined" && userId.length >= 12
+    );
+
+    // Validate before making the request
+    if (!userId || userId === "undefined" || typeof userId !== "string") {
+      console.error("Invalid userId provided to getUserPosts:", userId);
+      return Promise.reject(new Error(`Invalid userId: ${userId}`));
+    }
+
+    const url = `${POST_API_BASE}/user/${userId}`;
+    console.log("Making request to:", url);
+
+    return axiosInstance.get(url);
+  },
+
+  getAllPosts: () => axiosInstance.get(`${POST_API_BASE}/all`),
+  getPublicPosts: () => axiosInstance.get(`${POST_API_BASE}/public`),
 };
 
 export default apiService;

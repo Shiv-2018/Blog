@@ -17,17 +17,26 @@ export const Home = () => {
 
   useEffect(() => {
     fetchPosts();
+
+    if (isAuthenticated) {
+      setActiveTab("all");
+    } else {
+      setActiveTab("public");
+    }
   }, [isAuthenticated]);
 
   const fetchPosts = async () => {
     try {
       setLoading(true);
-      const publicPostsData = await apiService.getPublicPosts(6);
-      setPublicPosts(publicPostsData.data || []);
 
       if (isAuthenticated) {
-        const allPostsData = await apiService.getPosts({ limit: 10 });
-        setAllPosts(allPostsData.data || []);
+        const allPostsData = await apiService.getAllPosts();
+        console.log("All posts data:", allPostsData);
+        setAllPosts(allPostsData.data.data.posts || []);
+      } else {
+        const publicPostsData = await apiService.getPublicPosts();
+        console.log("Public posts data:", publicPostsData);
+        setPublicPosts(publicPostsData.data.data.posts || []);
       }
     } catch (error) {
       console.error("Error fetching posts:", error);
@@ -37,6 +46,7 @@ export const Home = () => {
   };
 
   const currentPosts = activeTab === "public" ? publicPosts : allPosts;
+  console.log("Current posts:", currentPosts);
 
   return (
     <div className="min-h-screen bg-background">

@@ -11,6 +11,7 @@ export const Dashboard = () => {
   const [userPosts, setUserPosts] = useState([]);
   const [allPosts, setAllPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null); // Add missing error state
   const [activeTab, setActiveTab] = useState("my-posts");
   const [stats, setStats] = useState({
     totalPosts: 0,
@@ -29,20 +30,51 @@ export const Dashboard = () => {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
+      setError(null); // Clear previous errors
+
+      const userData = user?.data;
+      //console.log("User data from context:", userData);
+      const userId = userData?._id || userData?.id;
+      //console.log("User ID from context:", userId);
+
+      // Check if user exists and has an ID
+      if (!userId) {
+        console.error("User not authenticated or user ID missing");
+        setError("User not authenticated");
+        return;
+      }
+
+      //console.log("Fetching data for user:", userId); // Debug log
+
+      try {
+        //console.log("Calling getPosts...");
+        const allPostsData = await apiService.getAllPosts();
+        //console.log("getPosts success:", allPostsData);
+      } catch (error) {
+        console.error("getPosts failed:", error);
+        console.error("getPosts error details:", error.response?.data);
+      }
+
       const [userPostsData, allPostsData] = await Promise.all([
-        apiService.getUserPosts(user._id),
-        apiService.getPosts(),
+        apiService.getUserPosts(userId),
+        apiService.getAllPosts(),
       ]);
 
-      const userPostsArray = userPostsData.data || [];
+      // Handle the ApiResponse format from your backend
+      const userPostsArray =
+        userPostsData?.data?.data || userPostsData?.data || [];
+      const allPostsArray =
+        allPostsData?.data?.data || allPostsData?.data || [];
+
       setUserPosts(userPostsArray);
-      setAllPosts(allPostsData.data || []);
+      setAllPosts(allPostsArray);
 
       // Calculate stats
       const totalViews = userPostsArray.reduce(
         (sum, post) => sum + (post.views || 0),
-        0,
+        0
       );
+
       setStats({
         totalPosts: userPostsArray.length,
         totalViews,
@@ -50,12 +82,52 @@ export const Dashboard = () => {
       });
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
+
+      // More detailed error logging
+      if (error.response) {
+        console.error("Response data:", error.response.data);
+        console.error("Response status:", error.response.status);
+
+        // Handle specific HTTP status codes
+        if (error.response.status === 401) {
+          setError("Please log in again");
+        } else if (error.response.status === 404) {
+          setError("Posts not found");
+        } else {
+          setError("Failed to fetch dashboard data");
+        }
+      } else if (error.request) {
+        setError("Network error. Please check your connection.");
+      } else {
+        setError("An unexpected error occurred");
+      }
     } finally {
       setLoading(false);
     }
   };
 
   const currentPosts = activeTab === "my-posts" ? userPosts : allPosts;
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="container max-w-7xl mx-auto px-4 py-8">
+          <div className="text-center py-12">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md mx-auto">
+              <h3 className="text-lg font-semibold text-red-800 mb-2">
+                Error Loading Dashboard
+              </h3>
+              <p className="text-red-600 mb-4">{error}</p>
+              <Button onClick={fetchDashboardData} variant="outline">
+                Try Again
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -64,7 +136,7 @@ export const Dashboard = () => {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold mb-2">
-              Welcome back, {user?.username}!
+              Welcome back, {user?.username || user?.name || "User"}!
             </h1>
             <p className="text-muted-foreground">
               Manage your posts and explore the community
