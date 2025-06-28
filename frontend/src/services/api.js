@@ -145,8 +145,10 @@
 
 import axios from "axios";
 
-const USER_API_BASE = "http://localhost:8000/api/v1/users";
-const POST_API_BASE = "http://localhost:8000/api/v1/posts";
+const API_BASE = import.meta.env.VITE_API_BASE_URL;
+
+const USER_API_BASE = `${API_BASE}/v1/users`;
+const POST_API_BASE = `${API_BASE}/v1/posts`;
 
 // Create axios instance with interceptors
 const axiosInstance = axios.create({
