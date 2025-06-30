@@ -84,6 +84,8 @@ const loginUser = asyncHandler(async (req, res) => {
   const options = {
     httpOnly: true,
     secure: true,
+    sameSite: "None", // ✅ allows Vercel ↔ Render cookie sharing
+    maxAge: 24 * 60 * 60 * 1000,
   };
 
   return res
