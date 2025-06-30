@@ -5,10 +5,15 @@ import userRouter from "./routes/user.routes.js";
 import postRouter from "./routes/post.routes.js";
 
 const app = express();
+const allowedOrigins = [
+  "http://localhost:5173", // local dev
+  "https://dayblog.vercel.app", // deployed frontend
+];
+
 app.use(
   cors({
-    origin: "https://dayblog.vercel.app", // Adjust this to your frontend's URL
-    credentials: true, // Allow cookies to be sent with requests
+    origin: allowedOrigins,
+    credentials: true,
   })
 );
 
